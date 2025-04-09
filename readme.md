@@ -27,13 +27,13 @@
 | **Upload**          | Upload files directly via the interface.                                                  |
 | **Inline Editor**   | Edit file contents directly in the browser, then save changes to the server.              |
 | **Breadcrumb**      | Clickable path segments to move between directories.                                      |
-| **Stealth**         | Can be hidden (e.g., rename to .init.php), e.g. `foxyshell.php` → `.init.php`.            |
+| **Stealth**         | Can be hidden (e.g., rename to .log.php), e.g. `foxyshell.php` → `.log.php`.            |
 
 **Main Selling Points**
 
 - **Works** even if some standard functions (```exec```, ```shell_exec```) are disabled, thanks to alternative methods.  
 - **Attractive UI**: Tailwind CSS-based dark mode, icons, truncated filenames, etc.  
-- **One-file solution**: just upload ```foxyshell.php``` to your target server, or hide it (e.g. ```.init.php```).  
+- **One-file solution**: just upload ```foxyshell.php``` to your target server, or hide it (e.g. ```.log.php```).  
 - **REST-ish endpoints**: can be extended for automation.  
 - **Potential** to add an “API KEY” check in ```foxyshell.php``` to secure access.
 
@@ -97,7 +97,7 @@ if (!empty($_GET['cmd'])) {
 
 - **Restrict Access**: Put this behind **HTTP Basic Auth** or an IP whitelist.  
 - **Use HTTPS**: If possible, always run over HTTPS to avoid exposing commands in plaintext.  
-- **Rename** to something less obvious (e.g., ```.init.php``` or ```upload-handler.php```).  
+- **Rename** to something less obvious (e.g., ```.log.php``` or ```upload-handler.php```).  
 - **Log** suspicious IP addresses or set honeypot triggers if you want advanced security.
 
 ---
