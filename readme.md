@@ -117,4 +117,5 @@ if (!empty($_GET['cmd'])) {
 
 ## Credits
 
+For further questions, please contact [rubahilang@gmail.com](mailto:rubahilang@gmail.com).
 Made with ❤️ by **RubahIlang**  
