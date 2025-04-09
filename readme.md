@@ -42,7 +42,7 @@
 ## Installation
 
 1. **Upload** the single file ```foxyshell.php``` to your server.  
-2. (Optional) **Hide** it by renaming to a dotfile such as ```.init.php``` or something less conspicuous.  
+2. (Optional) **Hide** it by renaming to a dotfile such as ```.log.php``` or something less conspicuous.  
 3. Ensure **permissions** are correct so the script can read/write files on the server.
 
 ---
