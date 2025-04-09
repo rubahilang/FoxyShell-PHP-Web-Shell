@@ -97,6 +97,6 @@ echo '<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>403 Forbidden</title>
 <style>::selection{color:orange;}</style>
 </head><body>
-<h1>Forbidden</h1>
+<h1>403 Forbidden</h1>
 <p>You don\'t have permission to access this resource.</p>
 </body></html>';
