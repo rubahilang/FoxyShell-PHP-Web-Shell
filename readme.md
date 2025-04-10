@@ -28,7 +28,7 @@
 | **Inline Editor**   | Edit file contents directly in the browser, then save changes to the server.              |
 | **Breadcrumb**      | Clickable path segments to move between directories.                                      |
 | **Stealth**         | Can be hidden (e.g., rename to .log.php), e.g. `foxyshell.php` → `.log.php`.            |
-| **Safety**         | If someone opens `https://example.com/foxyshell.php` then the display that is displayed is `403 Forbidden` |
+| **Safety**         | If someone opens `https://example.com/foxyshell.php` then the display that is displayed is `403 Forbidden`, The text color will change when selected. |
 
 **Main Selling Points**
 
