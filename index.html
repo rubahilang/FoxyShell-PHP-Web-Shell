@@ -278,7 +278,7 @@
       alert("URL API NOT SET!, Click Foxyx WebShell To SET API");
       return;
     }
-    var cmd='ls -1p';
+    let cmd = 'ls -1p -A';
     fetch(API+'?cwd='+encodeURIComponent(currentPath)+'&foxy='+encodeURIComponent(cmd))
       .then(function(r){return r.text();})
       .then(function(txt){
@@ -436,135 +436,141 @@
 
   // createItemRow => normal file/folder
   var renameModeItem=null;
-  function createItemRow(name,isFolder){
-    var li=document.createElement('li');
-    li.className='flex items-center justify-between bg-gray-800/40 rounded px-2 py-1';
 
-    var leftDiv=document.createElement('div');
-    leftDiv.className='flex items-center';
+  function createItemRow(name, isFolder){
+    var li = document.createElement('li');
+    li.className = 'flex items-center justify-between bg-gray-800/40 rounded px-2 py-1';
 
-    var icon=document.createElement('img');
-    icon.className='icon-orange mr-2';
-    icon.src=isFolder
+    var leftDiv = document.createElement('div');
+    leftDiv.className = 'flex items-center';
+
+    var icon = document.createElement('img');
+    icon.className = 'icon-orange mr-2';
+    icon.src = isFolder
       ? 'https://www.svgrepo.com/show/436171/close-folder-data.svg'
       : 'https://www.svgrepo.com/show/436151/file-file-format-folder.svg';
     leftDiv.appendChild(icon);
 
-    var displayName=name.length>25 ? name.slice(0,25)+'...' : name;
-    var span=document.createElement('span');
-    span.title=name;
+    var displayName = (name.length > 25) ? name.slice(0,25) + '...' : name;
+    var span = document.createElement('span');
+    span.title = name;
+
     if(isFolder){
-      span.className='text-foxOrange hover:underline cursor-pointer';
-      span.textContent=displayName;
-      span.onclick=function(){
-        runCommandSilent('cd '+name).then(function(){refreshList();});
+      // Folder => clickable for cd, highlight in orange
+      span.className = 'text-foxOrange hover:underline cursor-pointer';
+      span.textContent = displayName;
+      span.onclick = function(){
+        runCommandSilent('cd '+name).then(function(){ refreshList(); });
       };
     } else {
-      span.className='text-gray-200';
-      span.textContent=displayName;
+      // File => normal text
+      span.className = 'text-gray-200';
+      span.textContent = displayName;
     }
     leftDiv.appendChild(span);
     li.appendChild(leftDiv);
 
-    if(!isFolder){
-      if(renameModeItem===name){
-        // rename mode
-        var actions=document.createElement('div');
-        actions.className='flex items-center space-x-2 ml-4';
+    // If rename in progress for this item
+    if (renameModeItem === name){
+      // rename mode
+      var actions = document.createElement('div');
+      actions.className = 'flex items-center space-x-2 ml-4';
 
-        var inpR=document.createElement('input');
-        inpR.type='text';
-        inpR.className='bg-gray-700 text-gray-200 rounded px-2 py-0.5 w-36 focus:outline-none focus:ring-2 focus:ring-orange-500';
-        inpR.value=name;
-        actions.appendChild(inpR);
+      var inputRename = document.createElement('input');
+      inputRename.type = 'text';
+      inputRename.className = 'bg-gray-700 text-gray-200 rounded px-2 py-0.5 w-36 focus:outline-none focus:ring-2 focus:ring-orange-500';
+      inputRename.value = name;
+      actions.appendChild(inputRename);
 
-        var btnCheck=document.createElement('button');
-        btnCheck.className='icon-btn';
-        var imgChk=document.createElement('img');
-        imgChk.src='https://www.svgrepo.com/show/525266/check-square.svg';
-        imgChk.className='icon-orange';
-        btnCheck.appendChild(imgChk);
+      var btnCheck = document.createElement('button');
+      btnCheck.className = 'icon-btn';
+      var imgC = document.createElement('img');
+      imgC.src = 'https://www.svgrepo.com/show/525266/check-square.svg';
+      imgC.className = 'icon-orange';
+      btnCheck.appendChild(imgC);
 
-        btnCheck.onclick=function(){
-          var nv=inpR.value.trim();
-          if(!nv || nv===name){
-            renameModeItem=null;
-            refreshList();
-            return;
-          }
-          renameFile(name,nv);
-        };
-        actions.appendChild(btnCheck);
-
-        var btnX=document.createElement('button');
-        btnX.className='icon-btn';
-        var imgX3=document.createElement('img');
-        imgX3.src='https://www.svgrepo.com/show/433361/close-f.svg';
-        imgX3.className='icon-orange';
-        btnX.appendChild(imgX3);
-
-        btnX.onclick=function(){
+      btnCheck.onclick = function(){
+        var newVal = inputRename.value.trim();
+        if(!newVal || newVal===name){
           renameModeItem=null;
           refreshList();
-        };
-        actions.appendChild(btnX);
+          return;
+        }
+        renameFile(name, newVal);
+      };
+      actions.appendChild(btnCheck);
 
-        li.appendChild(actions);
-      } else {
-        // normal file
-        var actions2=document.createElement('div');
-        actions2.className='flex items-center space-x-2 ml-4';
+      var btnX = document.createElement('button');
+      btnX.className = 'icon-btn';
+      var imgX = document.createElement('img');
+      imgX.src = 'https://www.svgrepo.com/show/433361/close-f.svg';
+      imgX.className = 'icon-orange';
+      btnX.appendChild(imgX);
 
-        // Edit
-        var btnE=document.createElement('button');
-        btnE.className='icon-btn';
-        var imgE=document.createElement('img');
-        imgE.src='https://www.svgrepo.com/show/436186/edit-tool-pencil.svg';
-        imgE.className='icon-orange';
+      btnX.onclick = function(){
+        renameModeItem=null;
+        refreshList();
+      };
+      actions.appendChild(btnX);
+
+      li.appendChild(actions);
+    }
+    else {
+      // normal
+      var actions2 = document.createElement('div');
+      actions2.className = 'flex items-center space-x-2 ml-4';
+
+      // If it's a file => show "Edit"
+      if (!isFolder) {
+        var btnE = document.createElement('button');
+        btnE.className = 'icon-btn';
+        var imgE = document.createElement('img');
+        imgE.src = 'https://www.svgrepo.com/show/436186/edit-tool-pencil.svg';
+        imgE.className = 'icon-orange';
         btnE.appendChild(imgE);
-
-        btnE.onclick=(function(fname){
+        btnE.onclick = (function(fname){
           return function(){
-            currentFile=fname;
+            currentFile = fname;
             loadFile(fname);
           };
         })(name);
         actions2.appendChild(btnE);
-
-        // Delete
-        var btnD=document.createElement('button');
-        btnD.className='icon-btn';
-        var imgD=document.createElement('img');
-        imgD.src='https://www.svgrepo.com/show/436163/delete-trash-remove.svg';
-        imgD.className='icon-orange';
-        btnD.appendChild(imgD);
-
-        btnD.onclick=(function(fname){
-          return function(){
-            deleteFile(fname).then(function(){refreshList();});
-          };
-        })(name);
-        actions2.appendChild(btnD);
-
-        // Rename
-        var btnR=document.createElement('button');
-        btnR.className='icon-btn';
-        var imgR=document.createElement('img');
-        imgR.src='https://www.svgrepo.com/show/436169/pencil-tool-pen.svg';
-        imgR.className='icon-orange';
-        btnR.appendChild(imgR);
-
-        btnR.onclick=(function(fname){
-          return function(){
-            renameModeItem=fname;
-            refreshList();
-          };
-        })(name);
-        actions2.appendChild(btnR);
-
-        li.appendChild(actions2);
       }
+
+      // Show "Delete" for both file & folder
+      var btnDel = document.createElement('button');
+      btnDel.className = 'icon-btn';
+      var imgDel = document.createElement('img');
+      imgDel.src = 'https://www.svgrepo.com/show/436163/delete-trash-remove.svg';
+      imgDel.className = 'icon-orange';
+      btnDel.appendChild(imgDel);
+
+      btnDel.onclick = (function(fname){
+        return function(){
+          deleteFile(fname).then(function(){ refreshList(); });
+        };
+      })(name);
+      actions2.appendChild(btnDel);
+
+      // Show "Rename" for both file & folder
+      var btnRen = document.createElement('button');
+      btnRen.className = 'icon-btn';
+      var imgRen = document.createElement('img');
+      imgRen.src = 'https://www.svgrepo.com/show/436169/pencil-tool-pen.svg';
+      imgRen.className = 'icon-orange';
+      btnRen.appendChild(imgRen);
+
+      btnRen.onclick = (function(fname){
+        return function(){
+          renameModeItem = fname;
+          refreshList();
+        };
+      })(name);
+      actions2.appendChild(btnRen);
+
+      li.appendChild(actions2);
     }
+
     return li;
   }
 
