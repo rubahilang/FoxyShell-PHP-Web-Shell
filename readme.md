@@ -114,8 +114,9 @@ if (!empty($_GET['cmd'])) {
 **Q**: Does the shell require a database?  
 **A**: No. It’s a single ```.php``` file – no database or external dependencies needed.
 
-**Q**:How can I always have access even if the shell file has been deleted?
+**Q**: How can I always have access even if the shell file has been deleted?
 **A**: You can use crontab to automatically create a shell file in `/public_html/` every hour.
+
 #
 Example: (change `name.php` and `username` according to the server and file name you want)
 ```
