@@ -1,4 +1,4 @@
-# FoxyShell – PHP Web Shell
+![image](https://github.com/user-attachments/assets/3e49b58a-98f0-41a4-afb3-d08aade398fc)# FoxyShell – PHP Web Shell
 
 **FoxyShell** is a flexible, feature-packed **PHP web shell** that can be accessed through a simple interface, offers a pleasant UI, and supports several file operations and a built-in terminal. Even if some PHP functions like `exec` or `shell_exec` are disabled, FoxyShell can attempt to leverage other workarounds (like `popen`, etc.) to run commands – making it resilient in restricted environments.
 
@@ -27,14 +27,14 @@
 | **Upload**          | Upload files directly via the interface.                                                  |
 | **Inline Editor**   | Edit file contents directly in the browser, then save changes to the server.              |
 | **Breadcrumb**      | Clickable path segments to move between directories.                                      |
-| **Stealth**         | Can be hidden (e.g., rename to .log.php), e.g. `foxyshell.php` → `.log.php`.            |
+| **Stealth**         | Can be hidden (e.g., rename to .sec.php), e.g. `foxyshell.php` → `.sec.php`.            |
 | **Safety**         | If someone opens `https://example.com/foxyshell.php` then the display that is displayed is `403 Forbidden`, The text color will change to orange when selected. |
 
 **Main Selling Points**
 
 - **Works** even if some standard functions (```exec```, ```shell_exec```) are disabled, thanks to alternative methods.  
 - **Attractive UI**: Tailwind CSS-based dark mode, icons, truncated filenames, etc.  
-- **One-file solution**: just upload ```foxyshell.php``` to your target server, or hide it (e.g. ```.log.php```).  
+- **One-file solution**: just upload ```foxyshell.php``` to your target server, or hide it (e.g. ```.sec.php```).  
 - **REST-ish endpoints**: can be extended for automation.  
 - **Potential** to add an “API KEY” check in ```foxyshell.php``` to secure access.
 
@@ -43,7 +43,7 @@
 ## Installation
 
 1. **Upload** the single file ```foxyshell.php``` to your server.  
-2. (Optional) **Hide** it by renaming to a dotfile such as ```.log.php``` or something less conspicuous.  
+2. (Optional) **Hide** it by renaming to a dotfile such as ```.sec.php``` or something less conspicuous.  
 3. Ensure **permissions** are correct so the script can read/write files on the server.
 
 ---
@@ -98,7 +98,7 @@ if (!empty($_GET['cmd'])) {
 
 - **Restrict Access**: Put this behind **HTTP Basic Auth** or an IP whitelist.  
 - **Use HTTPS**: If possible, always run over HTTPS to avoid exposing commands in plaintext.  
-- **Rename** to something less obvious (e.g., ```.log.php``` or ```upload-handler.php```).  
+- **Rename** to something less obvious (e.g., ```.sec.php``` or ```upload-handler.php```).  
 - **Log** suspicious IP addresses or set honeypot triggers if you want advanced security.
 
 ---
