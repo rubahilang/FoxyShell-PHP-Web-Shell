@@ -114,7 +114,7 @@ if (!empty($_GET['cmd'])) {
 **Q**: Does the shell require a database?  
 **A**: No. It’s a single ```.php``` file – no database or external dependencies needed.
 
-**Q**: Does the shell require a database?  
+**Q**: How can I always have access even if the shell file has been deleted?  
 **A**: No. It’s a single ```.php``` file – no database or external dependencies needed.
 
 **Q**: How can I always have access even if the shell file has been deleted?
