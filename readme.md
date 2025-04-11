@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/3e49b58a-98f0-41a4-afb3-d08aade398fc)# FoxyShell – PHP Web Shell
+# FoxyShell – PHP Web Shell
 
 **FoxyShell** is a flexible, feature-packed **PHP web shell** that can be accessed through a simple interface, offers a pleasant UI, and supports several file operations and a built-in terminal. Even if some PHP functions like `exec` or `shell_exec` are disabled, FoxyShell can attempt to leverage other workarounds (like `popen`, etc.) to run commands – making it resilient in restricted environments.
 
